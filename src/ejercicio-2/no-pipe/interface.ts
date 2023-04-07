@@ -12,7 +12,7 @@
 
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { fileInfo } from './file-info-pipe.js';
+import { fileInfo } from './file-info.js';
 
 export function commandInterface() {
   const commands = hideBin(process.argv);
