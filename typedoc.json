@@ -1,0 +1,8 @@
+{
+  "entryPoints": [
+    "./src/funko/*.ts",
+    "./src/gestor/*.ts",
+    "./src/modif/*.ts"
+  ],
+  "out": "./docs"
+}
