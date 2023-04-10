@@ -40,3 +40,4 @@ export function fileInfo(fileName: string,linesNumber: boolean, wordsNumber: boo
 }
 
 //fileInfo("./src/ejercicio-2/fichero-ejemplo/fichero1.txt", true, true, true);
+//node dist/ejercicio-2/no-pipe/interface.js info --file "src/ejercicio-2/fichero-ejemplo/fichero1.txt" -l -w
