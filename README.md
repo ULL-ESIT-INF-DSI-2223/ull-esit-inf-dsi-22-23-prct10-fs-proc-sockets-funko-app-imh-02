@@ -8,8 +8,9 @@ Ismael Martín Herrera  *alu0101397375@ull.edu.es*
 2. [Ejercicio 1](#ejercicio-1)
 3. [Ejercicio 2](#ejercicio-2)
 4. [Ejercicio 3](#ejercicio-3)
-5. [Conclusión](#conclusión)
-6. [Referencias](#referencias)
+5. [Ejercicios PE](#ejercicios-pe)
+6. [Conclusión](#conclusión)
+7. [Referencias](#referencias)
 
 ## Introducción
 
@@ -61,7 +62,120 @@ Devuelve un objeto que contiene constantes de uso común para las operaciones de
 
 ## Ejercicio 2
 
+El ejercico 2 pedía desarrollar una aplicación que proporcione información sobre el número de líneas, palabras o caracteres que contiene un fichero de texto. En este sentido, había que realizar dos desarrollos de la misma aplicación, uno de ellos utilizando el método ```pipe```: 
+
+```ts
+export function fileInfo(fileName: string,linesNumber: boolean, wordsNumber: boolean, charsNumber: boolean) {
+  if (linesNumber === true) {
+    const lines = spawn( 'grep', ['-c', '^', fileName]);
+    lines.stdout.pipe(process.stdout);
+  }
+  if (wordsNumber === true) {
+    const fileContent = spawn('cat', [fileName]);
+    const wc = spawn('wc', ['-w']);
+    fileContent.stdout.pipe(wc.stdin);
+    wc.stdout.pipe(process.stdout);
+  }
+  if (charsNumber === true) {
+    const fileContent = spawn('cat', [fileName]);
+    const wc = spawn('wc', ['-c']);
+    fileContent.stdout.pipe(wc.stdin);
+    wc.stdout.pipe(process.stdout);
+  }
+}
+```
+
+En este primer desarrollo, en el caso del recuento de líneas he usado el comando ```grep``` puesto que devuelve el número de líneas exacto, en el caso de ```wc``` devolvería una línea menos. Por otra parte, para contar el número de palabras y el número de caracteres he usado el comando cat, y a continuación he redigido su salida a la entrada estándar del comando ```wc```. 
+
+Por otra parte, también se pedía realizar el mismo desarrollo pero sin usar el citado método ```pipe```, por lo que he seguido una estrategia basada en la creación de subprocesos y sus correspondiente manejadores, así como el uso del método ```write``` de un ```stream```. 
+
+```ts
+export function fileInfo(fileName: string,linesNumber: boolean, wordsNumber: boolean, charsNumber: boolean) {
+  if (linesNumber === true) {
+    const lines = spawn( 'grep', ['-c', '^', fileName]);
+    let linesOutput = 0;
+    lines.stdout.on('data', (info) => linesOutput = info);
+    lines.on('close', () => { // Manejador
+      console.log(`Número de líneas: ${linesOutput}`);
+    });
+  }
+  if (wordsNumber === true) {
+    const cat = spawn('cat', ['src/ejercicio-1/file.txt']);
+    
+    cat.stdout.on('data', (data) => {
+      const wc = spawn('wc', ['-w']);
+      wc.stdin.write(data);
+      wc.stdin.end();
+      wc.stdout.on('data', (data) => {
+        console.log(`Número de palabras: ${data}`);
+      }); 
+    });
+  }
+  if (charsNumber === true) {
+    const cat = spawn('cat', ['src/ejercicio-1/file.txt']);
+  
+    cat.stdout.on('data', (data) => {
+      const wc = spawn('wc', ['-c']);
+      wc.stdin.write(data);
+      wc.stdin.end();
+      wc.stdout.on('data', (data) => {
+        console.log(`Número de caracteres: ${data}`);
+      }); 
+    });
+  }
+}
+```
+
+Finalmente, tal y como pedía el enunciado he realizado una implementación de entrada por comandos mediante el paquete ```yargs```, que es igual para ambos casos, tanto con ```pipe``` como sin dicho método. 
+
+```ts
+export function commandInterface() {
+  const commands = hideBin(process.argv);
+
+  yargs(commands)
+  .command('info', 'Obtein file info', {
+  file: {
+   description: 'file',
+   type: 'string',
+   demandOption: true
+  },
+  l: {
+    description: 'lines',
+    demandOption: false
+  },
+  w: {
+    description: 'words',
+    demandOption: false
+  },
+  c: {
+    description: 'chars',
+    demandOption: false
+  }
+ }, (argv) => {
+  let lines = false;
+  let words = false;
+  let chars = false;
+  if (argv.l) {
+    lines = true;
+  }
+  if(argv.w) {
+    words = true;
+  }
+  if(argv.c) {
+    chars = true;
+  }
+   fileInfo(argv.file, lines, words, chars);
+ })
+ .help()
+ .argv;
+}
+
+commandInterface();
+```
+
 ## Ejercicio 3
+
+## Ejercicios PE
 
 ## Conclusión
 

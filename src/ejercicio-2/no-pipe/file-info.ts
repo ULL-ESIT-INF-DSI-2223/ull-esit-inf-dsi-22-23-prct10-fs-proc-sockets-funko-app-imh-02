@@ -22,26 +22,27 @@ export function fileInfo(fileName: string,linesNumber: boolean, wordsNumber: boo
     });
   }
   if (wordsNumber === true) {
-    const fileContent = spawn('cat', [fileName]);
-    let contentString = "";
-    fileContent.stdout.on('data', (content) => contentString = content);
-    console.log(contentString);
-    const wc = spawn('wc', ['-w', contentString]);
-    let words = 0;
-    wc.stdout.on('data', (wordsNumber) => words = wordsNumber);
-    wc.on('close', () => {
-      console.log(`Número de palabras: ${words}`);
-    }); 
+    const cat = spawn('cat', ['src/ejercicio-1/file.txt']);
+    
+    cat.stdout.on('data', (data) => {
+      const wc = spawn('wc', ['-w']);
+      wc.stdin.write(data);
+      wc.stdin.end();
+      wc.stdout.on('data', (data) => {
+        console.log(`Número de palabras: ${data}`);
+      }); 
+    });
   }
   if (charsNumber === true) {
-    //const lines = spawn( 'wc', ['-m',fileName]);
-    //console.log("Número de caracteres: ");
-    //lines.stdout.pipe(process.stdout);
-    const fileContent = spawn('cat', [fileName]);
-    const wc = spawn('wc', ['-c']);
-    fileContent.stdout.pipe(wc.stdin);
-    wc.stdout.pipe(process.stdout);
+    const cat = spawn('cat', ['src/ejercicio-1/file.txt']);
+  
+    cat.stdout.on('data', (data) => {
+      const wc = spawn('wc', ['-c']);
+      wc.stdin.write(data);
+      wc.stdin.end();
+      wc.stdout.on('data', (data) => {
+        console.log(`Número de caracteres: ${data}`);
+      }); 
+    });
   }
 }
-
-//fileInfo("./src/ejercicio-2/fichero-ejemplo/fichero1.txt", true, true, true);
