@@ -19,7 +19,8 @@ import { FunkoCollection } from '../funko/funko-collection.js';
 export type ResponseType = {
   type: 'add' | 'update' | 'remove' | 'read' | 'list';
   success: boolean;
-  funkoPops?: Funko[];
+  funkoPops?: Funko;
+  funkoPopsList?: Funko[];
 }
 
 
@@ -40,31 +41,80 @@ export class Server extends EventEmitter {
           this.emit('request', JSON.parse(wholeData), connection);
           messageLimit = wholeData.indexOf('\n');
         }
+        wholeData = '';
       });
 
       connection.on('close', () => {
         console.log('A client has disconnected.');
       });
-    }).listen(60300, () => {
+    }).listen(60301, () => {
       console.log('Waiting for clients to connect.');
     });
   }
 
-  manageAddRequest(request: RequestType, conecction: net.Socket) {
+  manageAddRequest(request: RequestType, connection: net.Socket){
+    const userName = request.user as string;;
+    const collection = new FunkoCollection(userName);
+    if (request.funkoPop !== undefined) {
+      const funko_json = JSON.parse(request.funkoPop);
+      collection.addFunko(new Funko(funko_json.id, funko_json.nombre, funko_json.descripcion, funko_json.tipo, funko_json.genero, funko_json.franquicia, funko_json.numeroFranquicia, funko_json.exclusivo, funko_json.caracteristicasEspeciales, funko_json.valor));
+      const response: ResponseType = {'type': 'add', 'success': true};
+      connection.write(JSON.stringify(response) + '\n');
+    } else {
+      const response: ResponseType = {'type': 'add', 'success': false};
+      connection.write(JSON.stringify(response) + '\n');
+    }
+  }
+
+  manageUpdateRequest(request: RequestType, connection: net.Socket) {
+    const userName = request.user as string;
+    const id = request.id as number;
+    const collection = new FunkoCollection(userName);
+    if (request.funkoPop !== undefined) {
+      const funko_json = JSON.parse(request.funkoPop);
+      collection.modifyFunko(id,new Funko(funko_json.id, funko_json.nombre, funko_json.descripcion, funko_json.tipo, funko_json.genero, funko_json.franquicia, funko_json.numeroFranquicia, funko_json.exclusivo, funko_json.caracteristicasEspeciales, funko_json.valor));
+      const response: ResponseType = {'type': 'update', 'success': true};
+      connection.write(JSON.stringify(response) + '\n');
+    } else {
+      const response: ResponseType = {'type': 'update', 'success': false};
+      connection.write(JSON.stringify(response) + '\n');
+    }
+  }
+
+  manageListRequest(request: RequestType, connection: net.Socket) {
     const userName = request.user as string;
     const collection = new FunkoCollection(userName);
+    if (collection.getAllFunkos().length > 0) {
+      const response: ResponseType ={'type': 'list', 'success': true, 'funkoPopsList': collection.getAllFunkos()};
+      connection.write(JSON.stringify(response) + '\n');
+    } else {
+      const response: ResponseType ={'type': 'list', 'success': false};
+      connection.write(JSON.stringify(response) + '\n');
+    }
   }
-  manageUpdateRequest(request: RequestType, conecction: net.Socket) {
-    //
+  manageRemoveRequest(request: RequestType, connection: net.Socket) {
+    const userName = request.user as string;
+    const id = request.id as number;
+    const collection = new FunkoCollection(userName);
+    if(collection.eraseFunko(id) !== undefined){
+      const response: ResponseType = {'type': 'remove', 'success': true};
+      connection.write(JSON.stringify(response) + '\n');
+    } else {
+      const response: ResponseType = {'type': 'remove', 'success': false};
+      connection.write(JSON.stringify(response) + '\n');
+    }
   }
-  manageListRequest(request: RequestType, conecction: net.Socket) {
-    //
-  }
-  manageRemoveRequest(request: RequestType, conecction: net.Socket) {
-    //
-  }
-  manageReadRequest(request: RequestType, conecction: net.Socket) {
-    //
+  manageReadRequest(request: RequestType, connection: net.Socket) {
+    const userName = request.user as string;
+    const collection = new FunkoCollection(userName);
+    const id = request.id as number;
+    if (collection.getFunkoId(id) !== undefined) {
+      // const response: ResponseType ={'type': 'read', 'success': true, 'funkoPops': collection.getFunkoId(id) as Funko};
+      // connection.write(JSON.stringify(response) + '\n');
+    } else {
+      const response: ResponseType ={'type': 'read', 'success': false};
+      connection.write(JSON.stringify(response) + '\n');
+    }
   }
 }
 
@@ -84,4 +134,5 @@ server_.on('request', (request, connection) => {
   } else if(client_request.type === "read") {
     server_.manageReadRequest(client_request, connection);
   }
+  //
 });

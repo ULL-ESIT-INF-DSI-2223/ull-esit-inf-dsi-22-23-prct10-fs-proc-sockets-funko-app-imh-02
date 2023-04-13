@@ -12,11 +12,11 @@
 
 
 import { Funko } from "./funko.js";
-import fs, { existsSync } from 'fs';
-import { TiposFunko } from "./funko.js";
-import { GeneroFunko } from "./funko.js";
-import { json } from "stream/consumers";
-import { Console } from "console";
+import fs from 'fs';
+// import { TiposFunko } from "./funko.js";
+// import { GeneroFunko } from "./funko.js";
+// import { json } from "stream/consumers";
+// import { Console } from "console";
 import chalk from "chalk";
 
 /**
@@ -36,7 +36,15 @@ export class FunkoCollection {
   constructor (private nombreUsuario: string) {
     let path = "./db/";
     path += nombreUsuario;
-      if (fs.existsSync(path)) {
+    fs.stat(path, (err) => {
+      if(err) {
+        console.log(chalk.red("No existe el directorio del usuario"));
+        fs.mkdir(path, (err) => {
+          if(err) {
+            console.log(chalk.red("Error al crear el directorio del usuario"));
+          }
+        });
+      } else {
         console.log(chalk.green("Existe el directorio del usuario"));
         const ficherosFunkos = fs.readdirSync(path).toString().split(",");
         if (ficherosFunkos[0] !== '') {
@@ -46,9 +54,8 @@ export class FunkoCollection {
             this.listaFunko.push(new Funko(jsonObject.id, jsonObject.nombre, jsonObject.descripcion, jsonObject.tipo, jsonObject.genero, jsonObject.franquicia, jsonObject.numeroFranquicia, jsonObject.exclusivo, jsonObject.caracteristicasEspeciales, jsonObject.valor));
           });
         }
-      } else { // Si no existe el directorio del usuario lo crea
-        fs.mkdirSync(path);
       }
+    });
   }
 
   /**
@@ -58,17 +65,23 @@ export class FunkoCollection {
    */
   addFunko(newFunko: Funko) {
     const path = "./db/" + this.nombreUsuario + "/" + newFunko.id + ".json";
-    if(!fs.existsSync(path)) {
-      fs.appendFileSync(path, newFunko.obtenerJSON());
-      const jsonObject = JSON.parse(newFunko.obtenerJSON());
-      this.listaFunko.push(new Funko(jsonObject.id, jsonObject.nombre, jsonObject.descripcion, jsonObject.tipo, jsonObject.genero, jsonObject.franquicia, jsonObject.numeroFranquicia, jsonObject.exclusivo, jsonObject.caracteristicasEspeciales, jsonObject.valor));
-      console.log(chalk.green("Funko añadido"));
-      return this.listaFunko;
-    } else {
-      console.log(chalk.red("Ya existe el funko con ese id"));
-      return undefined;
-    }
-
+    fs.stat(path, (err) => {
+      if(err) {
+        console.log(newFunko);
+        fs.appendFile(path, newFunko.obtenerJSON(), (err) => {
+          if(err) {
+            console.log(chalk.red("Error al añadir el funko"));
+          }
+        });
+        const jsonObject = JSON.parse(newFunko.obtenerJSON());
+        this.listaFunko.push(new Funko(jsonObject.id, jsonObject.nombre, jsonObject.descripcion, jsonObject.tipo, jsonObject.genero, jsonObject.franquicia, jsonObject.numeroFranquicia, jsonObject.exclusivo, jsonObject.caracteristicasEspeciales, jsonObject.valor));
+        console.log(chalk.green("Funko añadido"));
+        return this.listaFunko;
+      } else {
+        console.log(chalk.red("El funko ya existe"));
+        return undefined;
+      }
+    });
   }
 
   /**
@@ -76,14 +89,16 @@ export class FunkoCollection {
    * @param id Id del funko a mostrar
    * @returns Undefined en caso de no existir el funko o el funko en caso de existir
    */
-  getFunkoId(id: number) {
+  getFunkoId(id: number){
     const path = "./db/" + this.nombreUsuario + "/" + id + ".json";
-    if(fs.existsSync(path)) {
-      const funko = this.listaFunko.find((funko) => funko.id === id);
-      funko?.imprimirFunko();
-      return funko;
-    } 
-    console.log(chalk.red("El funko no existe"))
+    fs.stat(path, (err) => {
+      if(err !== null) {
+        const funko = this.listaFunko.find((funko) => funko.id === id);
+        return funko;
+      } else {
+        console.log(chalk.red("El funko no existe"));
+      }
+    });
     return undefined;
   }
 
@@ -94,13 +109,20 @@ export class FunkoCollection {
    */
   eraseFunko(id: number) {
     const path = "./db/" + this.nombreUsuario + "/" + id + ".json";
-    if(fs.existsSync(path)) {
-      fs.rmSync(path)
-      console.log(chalk.green("Funko eliminado"));
-    } else {
-      console.log(chalk.red("El funko no existe"));
-      return undefined;
-    }
+    fs.stat(path, (err) => {
+      if(err) {
+        console.log(chalk.red("El funko no existe"));
+        //return undefined;
+      } else {
+        fs.rm(path, (err) => {
+          if(err) {
+            console.log(chalk.red("Error al eliminar el funko"));
+          } else {
+            console.log(chalk.green("Funko eliminado"));
+          }
+        });
+      }
+    });
 
     const result: Funko[] = [];
     this.listaFunko.forEach((element) => {
@@ -118,9 +140,6 @@ export class FunkoCollection {
    * @returns Lista de funkos
    */
   getAllFunkos() {
-    this.listaFunko.forEach((funko) => {
-      funko.imprimirFunko();
-    });
     return this.listaFunko;
   }
 
@@ -132,15 +151,17 @@ export class FunkoCollection {
    */
   modifyFunko(id: number, modifiedFunko: Funko) {
     const path = "./db/" + this.nombreUsuario + "/" + id + ".json";
-    if(fs.existsSync(path)) {
-      this.eraseFunko(id);
-      this.addFunko(modifiedFunko);
-      console.log(chalk.green("Funko modificado"));
-      return this.listaFunko;
-    } else {
-      console.log(chalk.red("El funko no existe"));
-      return undefined;
-    }
+    fs.stat(path, (err) => {
+      if(err) {
+        console.log(chalk.red("El funko no existe"));
+        return undefined;
+      } else {
+        this.eraseFunko(id);
+        this.addFunko(modifiedFunko);
+        console.log(chalk.green("Funko modificado"));
+        return this.listaFunko;
+      }
+    });
   }
 }
 

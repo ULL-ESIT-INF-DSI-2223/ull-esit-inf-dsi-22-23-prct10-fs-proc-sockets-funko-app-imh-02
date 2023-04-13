@@ -17,11 +17,12 @@ import { Funko } from '../funko/funko.js';
 import { TiposFunko } from '../funko/funko.js';
 import { GeneroFunko } from '../funko/funko.js';
 import {EventEmitter} from 'events';
+import { ResponseType } from './server.js';
 
 export type RequestType = {
   type: 'add' | 'update' | 'remove' | 'read' | 'list';
   user?: string
-  funkoPop?: Funko[]
+  funkoPop?: string
   id?: number
 }
 
@@ -31,7 +32,7 @@ export class Client extends EventEmitter {
 
   constructor() {
     super();
-    this.client = net.connect({port: 60300});
+    this.client = net.connect({port: 60301});
     this.commands = hideBin(process.argv);
     this.add();
     this.list();
@@ -47,6 +48,7 @@ export class Client extends EventEmitter {
         this.emit('response', JSON.parse(wholeData));
         messageLimit = wholeData.indexOf('\n');
       }
+      wholeData = '';
     });
   }
 
@@ -151,7 +153,8 @@ export class Client extends EventEmitter {
       }
     
       const new_funko = new Funko(argv.id, argv.name, argv.desc, type, genre, argv.fr, argv.frn, argv.ex, argv.sf, argv.vl);
-      const request: RequestType = {'type': 'add', 'user': argv.user, 'funkoPop': [new_funko]};
+      const request: RequestType = {'type': 'add', 'user': argv.user, 'funkoPop': new_funko.obtenerJSON()};
+      console.log(new_funko);
       this.sendRequest(request)
      })
      .help()
@@ -276,8 +279,9 @@ export class Client extends EventEmitter {
          break;
      }
      const new_funko = new Funko(argv.id, argv.name, argv.desc, type, genre, argv.fr, argv.frn, argv.ex, argv.sf, argv.vl);
-      const request: RequestType = {'type': 'update','user': argv.user, 'funkoPop': [new_funko]};
-      this.sendRequest(request)
+     const request: RequestType = {'type': 'update', 'user': argv.user, 'funkoPop': new_funko.obtenerJSON()};
+     console.log(new_funko);
+     this.sendRequest(request)
     })
     .help()
     .argv;
@@ -336,5 +340,14 @@ const cliente = new Client();
 
 
 cliente.on('response', (request) => {
-  console.log(`Respuesta recibida ${request.type}`);
+  const serverResponse: ResponseType = request;
+  console.log(`Respuesta recibida ${serverResponse.type}`);
+  console.log(`La respuesta fue: ${serverResponse.success}`);
+  if(serverResponse.type === "list") {
+    console.log("La colleción es la siguiente:");
+    console.log(serverResponse.funkoPopsList);
+  } else if(serverResponse.type === "read") {
+    console.log("El funko solicitado es:");
+    console.log(serverResponse.funkoPops);
+  }
 });
