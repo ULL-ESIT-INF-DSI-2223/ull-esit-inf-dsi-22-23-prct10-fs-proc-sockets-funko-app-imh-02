@@ -11,6 +11,7 @@
  */
 
 import net from 'net';
+import {connect} from 'net';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { Funko } from '../funko/funko.js';
@@ -18,6 +19,7 @@ import { TiposFunko } from '../funko/funko.js';
 import { GeneroFunko } from '../funko/funko.js';
 import {EventEmitter} from 'events';
 import { ResponseType } from './server.js';
+import chalk from "chalk";
 
 export type RequestType = {
   type: 'add' | 'update' | 'remove' | 'read' | 'list';
@@ -32,7 +34,7 @@ export class Client extends EventEmitter {
 
   constructor() {
     super();
-    this.client = net.connect({port: 60301});
+    this.client = connect({port: 60301});
     this.commands = hideBin(process.argv);
     this.add();
     this.list();
@@ -49,6 +51,10 @@ export class Client extends EventEmitter {
         messageLimit = wholeData.indexOf('\n');
       }
       wholeData = '';
+    });
+
+    this.client.on('end', () => {
+      console.log('Connection closed');
     });
   }
 
@@ -154,7 +160,6 @@ export class Client extends EventEmitter {
     
       const new_funko = new Funko(argv.id, argv.name, argv.desc, type, genre, argv.fr, argv.frn, argv.ex, argv.sf, argv.vl);
       const request: RequestType = {'type': 'add', 'user': argv.user, 'funkoPop': new_funko.obtenerJSON()};
-      console.log(new_funko);
       this.sendRequest(request)
      })
      .help()
@@ -280,7 +285,6 @@ export class Client extends EventEmitter {
      }
      const new_funko = new Funko(argv.id, argv.name, argv.desc, type, genre, argv.fr, argv.frn, argv.ex, argv.sf, argv.vl);
      const request: RequestType = {'type': 'update', 'user': argv.user, 'funkoPop': new_funko.obtenerJSON()};
-     console.log(new_funko);
      this.sendRequest(request)
     })
     .help()
@@ -342,12 +346,23 @@ const cliente = new Client();
 cliente.on('response', (request) => {
   const serverResponse: ResponseType = request;
   console.log(`Respuesta recibida ${serverResponse.type}`);
-  console.log(`La respuesta fue: ${serverResponse.success}`);
-  if(serverResponse.type === "list") {
-    console.log("La colleción es la siguiente:");
-    console.log(serverResponse.funkoPopsList);
-  } else if(serverResponse.type === "read") {
-    console.log("El funko solicitado es:");
-    console.log(serverResponse.funkoPops);
+  if(serverResponse.success) {
+    console.log(chalk.green(`La petición resultó: ${serverResponse.success}`));
+    if(serverResponse.type === "list") {
+      console.log("La colleción es la siguiente:");
+      const funkoPops: Funko[] = serverResponse.funkoPopsList as Funko[];
+      funkoPops.forEach((funko) => {
+        let funko_: Funko = new Funko(0, "", "", TiposFunko.POP, GeneroFunko.PELICULAS, "", 1, false, "", 20);
+        funko_ = Object.assign(funko_, funko);
+        funko_.imprimirFunko();
+      });
+    } else if(serverResponse.type === "read") {
+      console.log("El funko solicitado es:");
+      let funko_: Funko = new Funko(0, "", "", TiposFunko.POP, GeneroFunko.PELICULAS, "", 1, false, "", 20);
+      funko_ = Object.assign(funko_, serverResponse.funkoPops);
+      funko_.imprimirFunko()
+    }
+  } else {
+    console.log(chalk.red(`La respuesta fue: ${serverResponse.success}`));
   }
 });
