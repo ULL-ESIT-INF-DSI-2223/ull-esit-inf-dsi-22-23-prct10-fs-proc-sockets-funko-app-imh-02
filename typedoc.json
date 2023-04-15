@@ -1,8 +1,10 @@
 {
   "entryPoints": [
-    "./src/funko/*.ts",
-    "./src/gestor/*.ts",
-    "./src/modif/*.ts"
+    "./src/ejercicio-2/pipe/*.ts",
+    "./src/ejercicio-2/no-pipe/*.ts",
+    "./src/modif/*.ts",
+    "./src/ejercicio-3/cliente-servidor/*.ts",
+    "./src/ejercicio-3/funko/*.ts",
   ],
   "out": "./docs"
 }

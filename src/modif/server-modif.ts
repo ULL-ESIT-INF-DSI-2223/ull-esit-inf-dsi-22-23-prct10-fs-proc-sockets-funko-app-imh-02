@@ -15,7 +15,7 @@ import {EventEmitter} from 'events';
 import {spawn} from 'child_process';
 
 export class MessageEventEmitterServer extends EventEmitter {
-  constructor() {
+  constructor(port: number) {
     super();
     net.createServer((connection) => {
       console.log('A client has connected.');
@@ -31,14 +31,14 @@ export class MessageEventEmitterServer extends EventEmitter {
           messageLimit = wholeData.indexOf('\n');
         }
       });
-    }).listen(60300, () => {
+    }).listen(port, () => {
       console.log('Waiting for clients to connect.');
     });
   }
 }
 
 
-const server = new MessageEventEmitterServer();
+const server = new MessageEventEmitterServer(60301);
 
 server.on('command', (message, connection) => {
   console.log(`Comando a ejecutar ${message.command}`);

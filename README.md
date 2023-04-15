@@ -175,8 +175,196 @@ commandInterface();
 
 ## Ejercicio 3
 
+En el ejercicio 3 se pide la creación de una aplicación para el almacenamiento de funkos, basado en la pŕactica anterior, pero siguiendo el modelo ```cliente-servidor```. En este sentido, he desarrollado dos clases que heredan de ```EventEmiter``` para poder emitir eventos tanto en el servidor como en el cliente, esto con el objetivo de emitir una evento cada vez que se detecte un mensaje completo. En relación a la detección de mensajes completos, he seguido el mismo "protocolo" que se usa en los apuntes, es decir, considerar un mensaje acabado al encontrar un '\n'. 
+
+```ts
+export class Client extends EventEmitter {
+  private client: net.Socket;
+  private commands: string[];
+
+  constructor() {
+    super();
+    this.client = connect({port: 60301});
+    this.commands = hideBin(process.argv);
+    this.add();
+    this.list();
+    this.read();
+    this.update();
+    this.remove();
+    let wholeData = '';
+    this.client.on('data', (dataChunk) => {
+      wholeData += dataChunk;
+      let messageLimit = wholeData.indexOf('\n');
+      while (messageLimit !== -1) { 
+        wholeData = wholeData.substring(0, messageLimit);
+        this.emit('response', JSON.parse(wholeData));
+        messageLimit = wholeData.indexOf('\n');
+      }
+      wholeData = '';
+    });
+
+    this.client.on('end', () => {
+      console.log('Connection closed');
+    });
+  }
+
+  ...
+```
+*Parte de la clase Client*
+
+```ts
+export class Server extends EventEmitter {
+  constructor() {
+    super();
+    net.createServer((connection) => {
+      console.log('A client has connected.');
+
+      let wholeData = '';
+      connection.on('data', (dataChunk) => {
+        wholeData += dataChunk;
+        let messageLimit = wholeData.indexOf('\n');
+        while (messageLimit !== -1) { 
+          wholeData = wholeData.substring(0, messageLimit);
+          this.emit('request', JSON.parse(wholeData), connection);
+          messageLimit = wholeData.indexOf('\n');
+        }
+        wholeData = '';
+      });
+
+      connection.on('close', () => {
+        console.log('A client has disconnected.');
+      });
+    }).listen(60301, () => {
+      console.log('Waiting for clients to connect.');
+    });
+  }
+
+}
+```
+
+Además de crear las clases expuestas previamente, también he creado dos tipos para "estandarizar" las comunicaciones ```cliente-servidor```. Por un lado, el tipo ```ResponseType```, para las respuestas del servidor a las peticiones del cliente. 
+
+```ts
+export type ResponseType = {
+  type: 'add' | 'update' | 'remove' | 'read' | 'list';
+  success: boolean;
+  funkoPops?: Funko;
+  funkoPopsList?: Funko[];
+}
+```
+
+Y por otro lado, el tipo ```RequestType```, para las peticiones del cliente al servidor. 
+
+```ts
+export type RequestType = {
+  type: 'add' | 'update' | 'remove' | 'read' | 'list';
+  user?: string
+  funkoPop?: string
+  id?: number
+}
+```
+
+Finalmente, también se pedía cambiar la lógica de gestión de ficheros de la API síncrona de Node JS a la asíncrona. Sin embargo, tras intentarlo no he conseguido hacerlo, puesto que a la hora de leer un directorio de un usuario y tratar de leer cada uno de sus ficheros para crear los funkos y guardarlos en un array, las operaciones se realizaban pero, el array realmente se queda ```undefined```. 
+
 ## Ejercicios PE
+
+El enunciado del ejercicio de la sesión PE es el siguiente: 
+
+```
+Desarrolle los siguientes ejercicios en un proyecto alojado en un nuevo repositorio de GitHub:
+
+    Desarrolle un cliente y un servidor en Node.js, haciendo uso de sockets, que incorporen la siguiente funcionalidad:
+        - El cliente debe recibir, desde la línea de comandos, un comando Unix/Linux, además de sus argumentos correspondientes, que ejecutaremos en el servidor.
+        - El servidor debe recibir la petición del cliente, procesarla, esto es, ejecutar el comando solicitado, y devolver la respuesta del comando al cliente. Para ello, piense que el comando solicitado puede haberse ejecutado correctamente o puede haber fallado, por ejemplo, por no existir o porque se le han pasado unos argumentos no válidos.
+    Trate de definir pruebas con Mocha y Chai que comprueben el funcionamiento de los métodos que ha implementado. Tenga en cuenta que, lo ideal, es que utilice el patrón callback para implementar dichos métodos, dado que lo anterior facilitará el desarrollo de las pruebas.
+    Incorpore un flujo de GitHub que ejecute sus pruebas en diferentes entornos con diferentes versiones de Node.js.
+```
+
+Y el código que he desarrollado es el siguiente: 
+
+```ts
+if (process.argv.length < 3) {
+    console.log(`Debe introducir un comando como argumento`);
+} else {
+    const client = net.connect({port: 60301});
+    client.on('data', (dataJSON) => {
+        const message = JSON.parse(dataJSON.toString());
+        
+        if (message.type === 'established') {
+            console.log(`Conexión establecida con el servidor`);
+            const command = process.argv[2];
+            const args: string[] = [];
+            if(process.argv.length > 3) {
+                for(let i = 3; i < process.argv.length; ++i) {
+                    args.push(process.argv[i]);
+                }
+            }
+            client.write(JSON.stringify({'command': command, 'args': args}) + '\n');
+        } else if (message.type === 'salida') {
+            console.log(message.salida);
+        } else if (message.type === 'error') {
+            console.log(message.salida);
+        }
+    });
+
+    client.on('end', () => {
+        console.log('Comunicación cerrada');
+    });
+}
+```
+*Código del cliente*
+
+```ts
+export class MessageEventEmitterServer extends EventEmitter {
+  constructor(port: number) {
+    super();
+    net.createServer((connection) => {
+      console.log('A client has connected.');
+      connection.write(JSON.stringify({'type': 'established'}));
+      let wholeData = '';
+      connection.on('data', (dataChunk) => {
+        wholeData += dataChunk;
+        let messageLimit = wholeData.indexOf('\n');
+        while (messageLimit !== -1) { 
+          wholeData = wholeData.substring(0, messageLimit);
+          console.log(wholeData);
+          this.emit('command', JSON.parse(wholeData), connection);
+          messageLimit = wholeData.indexOf('\n');
+        }
+      });
+    }).listen(port, () => {
+      console.log('Waiting for clients to connect.');
+    });
+  }
+}
+```
+*Clase para el servidor, heredando de EventEmitter*
+
+
+```ts
+server.on('command', (message, connection) => {
+  console.log(`Comando a ejecutar ${message.command}`);
+  const command = spawn(message.command, message.args);
+  command.on('error', () => {
+    connection.write(JSON.stringify({'type': 'salida', 'salida': 'Error en el comando'}))
+    connection.end();
+  });
+  command.stdout.on('data', (content) =>{
+    connection.write(JSON.stringify({'type': 'salida', 'salida': content.toString()}))
+    connection.end();
+  });
+  command.stderr.on('data', (content) =>{
+    connection.write(JSON.stringify({'type': 'error', 'salida': content.toString()}))
+    connection.end();
+  });
+});
+```
+*Manejador del evento del servidor*
 
 ## Conclusión
 
+En conclusión, en esta prácticas he profundizado más en la creación de una aplicación siguiendo el modelo ```cliente-servidor```. Además, de entender y utilizar la creación de procesos hijos en ```TypeScript```. Sin embargo, la parte de realizar el código de los ficheros asíncrono me ha sido bastante complicada, así como también realizar test para este tipo de código. 
+
 ## Referencias
+
+[1 Guión de la práctica](https://ull-esit-inf-dsi-2223.github.io/prct10-fs-proc-sockets-funko-app/)

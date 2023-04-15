@@ -16,6 +16,9 @@ import { Funko } from '../funko/funko.js';
 import { RequestType } from './client.js';
 import { FunkoCollection } from '../funko/funko-collection.js';
 
+/**
+ * Tipo para representar una respuesta del servidor
+ */
 export type ResponseType = {
   type: 'add' | 'update' | 'remove' | 'read' | 'list';
   success: boolean;
@@ -23,7 +26,9 @@ export type ResponseType = {
   funkoPopsList?: Funko[];
 }
 
-
+/**
+ * Clase que representa un servidor, heredando de EventEmitter
+ */
 export class Server extends EventEmitter {
   constructor() {
     super();
@@ -54,6 +59,9 @@ export class Server extends EventEmitter {
 
 const server_ = new Server();
 
+/**
+ * Función para manejar la petición del cliente
+ */
 server_.on('request', (request, connection) => {
   const client_request = request as RequestType;
   console.log(`Petición recibida ${client_request.type}`);
@@ -116,8 +124,8 @@ server_.on('request', (request, connection) => {
     const collection = new FunkoCollection(userName);
     const id = request.id as number;
     if (collection.getFunkoId(id) !== undefined) {
-      const response: ResponseType ={'type': 'read', 'success': true, 'funkoPops': collection.getFunkoId(id) as Funko};
-      connection.write(JSON.stringify(response) + '\n');
+      // const response: ResponseType ={'type': 'read', 'success': true, 'funkoPops': collection.getFunkoId(id) as Funko};
+      // connection.write(JSON.stringify(response) + '\n');
     } else {
       const response: ResponseType ={'type': 'read', 'success': false};
       connection.write(JSON.stringify(response) + '\n');

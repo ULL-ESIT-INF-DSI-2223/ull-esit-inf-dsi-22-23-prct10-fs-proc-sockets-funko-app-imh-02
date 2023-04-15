@@ -21,6 +21,9 @@ import {EventEmitter} from 'events';
 import { ResponseType } from './server.js';
 import chalk from "chalk";
 
+/**
+ * Tipo para representar una petición al servidor
+ */
 export type RequestType = {
   type: 'add' | 'update' | 'remove' | 'read' | 'list';
   user?: string
@@ -28,6 +31,9 @@ export type RequestType = {
   id?: number
 }
 
+/**
+ * Clase que representa un cliente, heredando de EventEmitter
+ */
 export class Client extends EventEmitter {
   private client: net.Socket;
   private commands: string[];
@@ -58,6 +64,17 @@ export class Client extends EventEmitter {
     });
   }
 
+  /**
+   * Método para devolver el socket del cliente
+   * @returns Devuelve el socket del cliente
+   */
+  getClient() {
+    return this.client;
+  }
+
+  /**
+   * Método para manejar la petición de añadir un Funko a través de yargs
+   */
   add() {
     yargs(this.commands)
       .command('add', 'Adds a funko', {
@@ -167,6 +184,9 @@ export class Client extends EventEmitter {
   
   }
 
+  /**
+   * Método para manejar la petición de listar los Funkos de un usuario a través de yargs
+   */
   list() {
     yargs(this.commands)
       .command('list', 'List all user Funkos', {
@@ -183,6 +203,9 @@ export class Client extends EventEmitter {
      .argv;
   }
 
+  /**
+   * Método para manejar la petición de modificar un Funko a través de yargs
+  */
   update() {
 
     yargs(this.commands)
@@ -291,6 +314,9 @@ export class Client extends EventEmitter {
     .argv;
   }
 
+  /**
+   * Método para manejar la petición de leer un Funko a través de yargs
+   */
   read() {
     yargs(this.commands)
      .command('read', 'Show al information of a Funko', {
@@ -313,6 +339,9 @@ export class Client extends EventEmitter {
  
   }
 
+  /**
+   * Método para manejar la petición de eliminar un Funko a través de yargs
+   */
   remove() {
     yargs(this.commands)
     .command('remove', 'Remove a funko', {
@@ -342,7 +371,9 @@ export class Client extends EventEmitter {
 
 const cliente = new Client();
 
-
+/**
+ * Método para manejar la respuesta del servidor
+ */
 cliente.on('response', (request) => {
   const serverResponse: ResponseType = request;
   console.log(`Respuesta recibida ${serverResponse.type}`);

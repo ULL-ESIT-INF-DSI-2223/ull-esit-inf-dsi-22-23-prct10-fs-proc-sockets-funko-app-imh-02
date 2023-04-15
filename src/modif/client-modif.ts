@@ -15,7 +15,7 @@ import net from 'net';
 if (process.argv.length < 3) {
     console.log(`Debe introducir un comando como argumento`);
 } else {
-    const client = net.connect({port: 60300});
+    const client = net.connect({port: 60301});
     client.on('data', (dataJSON) => {
         const message = JSON.parse(dataJSON.toString());
         
