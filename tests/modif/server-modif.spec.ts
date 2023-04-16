@@ -20,13 +20,13 @@ import {MessageEventEmitterServer} from '../../src/modif/server-modif.js'
 //     const server = new MessageEventEmitterServer(60302);
 //     const client = net.connect({port: 60302});
 //     server.on('command', (message, connection) => {
-//       expect(message).to.be.eql({'command': 'cat', 'args': 'tests/modif/fichero-test.txt'});
+//       expect(message).to.be.eql({'type': 'connect', 'success': true});
 //       connection.end();
+//       server.server_.close();
 //       done();
 //     });
 
-//     client.write(JSON.stringify({'command': 'cat', 'args': 'tests/modif/fichero-test.txt'}));
+//     client.write('{"type": "connect", "success": true}');
 //     client.write('\n');
-    
 //   });
 // });

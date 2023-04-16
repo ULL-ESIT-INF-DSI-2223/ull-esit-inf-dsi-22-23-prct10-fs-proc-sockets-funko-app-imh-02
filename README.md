@@ -264,7 +264,7 @@ export type RequestType = {
 }
 ```
 
-Finalmente, también se pedía cambiar la lógica de gestión de ficheros de la API síncrona de Node JS a la asíncrona. Sin embargo, tras intentarlo no he conseguido hacerlo, puesto que a la hora de leer un directorio de un usuario y tratar de leer cada uno de sus ficheros para crear los funkos y guardarlos en un array, las operaciones se realizaban pero, el array realmente se queda ```undefined```. 
+Finalmente, también se pedía cambiar la lógica de gestión de ficheros de la API síncrona de Node JS a la asíncrona. Sin embargo, tras intentarlo no he conseguido hacerlo, puesto que a la hora de leer un directorio de un usuario y tratar de leer cada uno de sus ficheros para crear los funkos y guardarlos en un array, las operaciones se realizaban pero, el array realmente se queda ```undefined```. En el directorio correspondiente al código de los Funkos se encuentra un fichero ```async-funko-collection``` con el código asíncrono que he intetando implementar. 
 
 ## Ejercicios PE
 

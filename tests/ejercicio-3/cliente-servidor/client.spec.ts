@@ -10,20 +10,20 @@
  * @date 13/04/2023
  */
 
-// import 'mocha';
-// import {expect} from 'chai';
-// import {Client} from '../../src/ejercicio-3/cliente-servidor/client.js';
-// import {Server} from '../../src/ejercicio-3/cliente-servidor/server.js';
+import 'mocha';
+import {expect} from 'chai';
+import {Client} from '../../../src/ejercicio-3/cliente-servidor/client.js';
+import net from 'net';
 
-// describe('MessageEventEmitterClient', () => {
-//   it('Should emit a message event once it gets a complete message', (done) => {
-//     const client = new Client();
-//     client.on('response', (message) => {
-//       expect(message).to.be.eql({'type': 'list', 'success': true});
-//       done();
-//     });
-
-//     client.getClient().emit('data', '{"type": "list", "success": true');
-//     client.getClient().emit('data', '}\n');
-//   });
-// });
+describe('Cliente', () => {
+    it("El cliente es capaz de emitir un evento al recibir una respuesta por trozo", (done) => {
+      const socket = new net.Socket();
+      const client = new Client(socket);
+      client.on('response', (response) => {
+        expect(response).to.be.eql({'type': 'add', 'success': false});
+        done();
+      });
+      socket.emit('data', '{"type": "add", "success": false}');
+      socket.emit('data', '\n');
+    });
+});

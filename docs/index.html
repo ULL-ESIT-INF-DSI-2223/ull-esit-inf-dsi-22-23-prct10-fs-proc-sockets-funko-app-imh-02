@@ -88,7 +88,7 @@
 <p>Y por otro lado, el tipo <code>RequestType</code>, para las peticiones del cliente al servidor. </p>
 <pre><code class="language-ts"><span class="hl-0">export</span><span class="hl-1"> </span><span class="hl-6">type</span><span class="hl-1"> </span><span class="hl-8">RequestType</span><span class="hl-1"> = {</span><br/><span class="hl-1">  </span><span class="hl-2">type</span><span class="hl-1">: </span><span class="hl-3">&#39;add&#39;</span><span class="hl-1"> | </span><span class="hl-3">&#39;update&#39;</span><span class="hl-1"> | </span><span class="hl-3">&#39;remove&#39;</span><span class="hl-1"> | </span><span class="hl-3">&#39;read&#39;</span><span class="hl-1"> | </span><span class="hl-3">&#39;list&#39;</span><span class="hl-1">;</span><br/><span class="hl-1">  </span><span class="hl-2">user</span><span class="hl-1">?: </span><span class="hl-8">string</span><br/><span class="hl-1">  </span><span class="hl-2">funkoPop</span><span class="hl-1">?: </span><span class="hl-8">string</span><br/><span class="hl-1">  </span><span class="hl-2">id</span><span class="hl-1">?: </span><span class="hl-8">number</span><br/><span class="hl-1">}</span>
 </code></pre>
-<p>Finalmente, también se pedía cambiar la lógica de gestión de ficheros de la API síncrona de Node JS a la asíncrona. Sin embargo, tras intentarlo no he conseguido hacerlo, puesto que a la hora de leer un directorio de un usuario y tratar de leer cada uno de sus ficheros para crear los funkos y guardarlos en un array, las operaciones se realizaban pero, el array realmente se queda <code>undefined</code>. </p>
+<p>Finalmente, también se pedía cambiar la lógica de gestión de ficheros de la API síncrona de Node JS a la asíncrona. Sin embargo, tras intentarlo no he conseguido hacerlo, puesto que a la hora de leer un directorio de un usuario y tratar de leer cada uno de sus ficheros para crear los funkos y guardarlos en un array, las operaciones se realizaban pero, el array realmente se queda <code>undefined</code>. En el directorio correspondiente al código de los Funkos se encuentra un fichero <code>async-funko-collection</code> con el código asíncrono que he intetando implementar. </p>
 
 <a href="#ejercicios-pe" id="ejercicios-pe" style="color: inherit; text-decoration: none;">
   <h2>Ejercicios PE</h2>
@@ -144,6 +144,7 @@
 <li class="tsd-kind-module"><a href="modules/ejercicio_2_pipe_interface.html">ejercicio-<wbr/>2/pipe/interface</a></li>
 <li class="tsd-kind-module"><a href="modules/ejercicio_3_cliente_servidor_client.html">ejercicio-<wbr/>3/cliente-<wbr/>servidor/client</a></li>
 <li class="tsd-kind-module"><a href="modules/ejercicio_3_cliente_servidor_server.html">ejercicio-<wbr/>3/cliente-<wbr/>servidor/server</a></li>
+<li class="tsd-kind-module"><a href="modules/ejercicio_3_funko_async_funko_collection.html">ejercicio-<wbr/>3/funko/async-<wbr/>funko-<wbr/>collection</a></li>
 <li class="tsd-kind-module"><a href="modules/ejercicio_3_funko_funko.html">ejercicio-<wbr/>3/funko/funko</a></li>
 <li class="tsd-kind-module"><a href="modules/ejercicio_3_funko_funko_collection.html">ejercicio-<wbr/>3/funko/funko-<wbr/>collection</a></li>
 <li class="tsd-kind-module"><a href="modules/modif_client_modif.html">modif/client-<wbr/>modif</a></li>

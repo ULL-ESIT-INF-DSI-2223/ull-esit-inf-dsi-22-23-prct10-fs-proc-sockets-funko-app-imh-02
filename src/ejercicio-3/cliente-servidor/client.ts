@@ -38,9 +38,9 @@ export class Client extends EventEmitter {
   private client: net.Socket;
   private commands: string[];
 
-  constructor() {
+  constructor(socket: net.Socket) {
     super();
-    this.client = connect({port: 60301});
+    this.client = socket;
     this.commands = hideBin(process.argv);
     this.add();
     this.list();
@@ -55,8 +55,8 @@ export class Client extends EventEmitter {
         wholeData = wholeData.substring(0, messageLimit);
         this.emit('response', JSON.parse(wholeData));
         messageLimit = wholeData.indexOf('\n');
+        wholeData = '';
       }
-      wholeData = '';
     });
 
     this.client.on('end', () => {
@@ -363,37 +363,41 @@ export class Client extends EventEmitter {
    .argv;
   }
 
+  /**
+   * Método para enviar una petición al servidor
+   */
   sendRequest(request:  RequestType) {
     this.client.write(JSON.stringify(request) + '\n');
   }
 
-}
+  /**
+   * Método para manejar los eventos de respuesta del servidor
+   */
+  response() {
 
-const cliente = new Client();
-
-/**
- * Método para manejar la respuesta del servidor
- */
-cliente.on('response', (request) => {
-  const serverResponse: ResponseType = request;
-  console.log(`Respuesta recibida ${serverResponse.type}`);
-  if(serverResponse.success) {
-    console.log(chalk.green(`La petición resultó: ${serverResponse.success}`));
-    if(serverResponse.type === "list") {
-      console.log("La colleción es la siguiente:");
-      const funkoPops: Funko[] = serverResponse.funkoPopsList as Funko[];
-      funkoPops.forEach((funko) => {
-        let funko_: Funko = new Funko(0, "", "", TiposFunko.POP, GeneroFunko.PELICULAS, "", 1, false, "", 20);
-        funko_ = Object.assign(funko_, funko);
-        funko_.imprimirFunko();
-      });
-    } else if(serverResponse.type === "read") {
-      console.log("El funko solicitado es:");
-      let funko_: Funko = new Funko(0, "", "", TiposFunko.POP, GeneroFunko.PELICULAS, "", 1, false, "", 20);
-      funko_ = Object.assign(funko_, serverResponse.funkoPops);
-      funko_.imprimirFunko()
-    }
-  } else {
-    console.log(chalk.red(`La respuesta fue: ${serverResponse.success}`));
+    this.on('response', (request) => {
+      const serverResponse: ResponseType = request;
+      console.log(`Respuesta recibida ${serverResponse.type}`);
+      if(serverResponse.success) {
+        console.log(chalk.green(`La petición resultó: ${serverResponse.success}`));
+        if(serverResponse.type === "list") {
+          console.log("La colleción es la siguiente:");
+          const funkoPops: Funko[] = serverResponse.funkoPopsList as Funko[];
+          funkoPops.forEach((funko) => {
+            let funko_: Funko = new Funko(0, "", "", TiposFunko.POP, GeneroFunko.PELICULAS, "", 1, false, "", 20);
+            funko_ = Object.assign(funko_, funko);
+            funko_.imprimirFunko();
+          });
+        } else if(serverResponse.type === "read") {
+          console.log("El funko solicitado es:");
+          let funko_: Funko = new Funko(0, "", "", TiposFunko.POP, GeneroFunko.PELICULAS, "", 1, false, "", 20);
+          funko_ = Object.assign(funko_, serverResponse.funkoPops);
+          funko_.imprimirFunko()
+        }
+      } else {
+        console.log(chalk.red(`La respuesta fue: ${serverResponse.success}`));
+      }
+    });
   }
-});
+
+}
